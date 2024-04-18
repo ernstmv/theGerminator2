@@ -41,7 +41,9 @@ class ButtonsFrame(ctk.CTkFrame):
         self.grid_columnconfigure((1, 2, 3, 4, 5, 6), weight=1)
         self.grid_rowconfigure((0, 1, 2, 3), weight=1)
 
-        self.registered_ips = None
+        self.reload_ips()
+        self.ip = None
+        self.ip_fields = [None] * 4
 
         self.save_ip_button = ctk.CTkButton(
                 self,
@@ -94,26 +96,26 @@ class ButtonsFrame(ctk.CTkFrame):
                 fg_color='transparent',
                 text_color=BLUE)
 
-        self.ip1_entry = ctk.CTkEntry(
-                self,
-                fg_color='transparent',
-                text_color=BLUE)
-        self.ip2_entry = ctk.CTkEntry(
-                self,
-                fg_color='transparent',
-                text_color=BLUE)
-        self.ip3_entry = ctk.CTkEntry(
-                self,
-                fg_color='transparent',
-                text_color=BLUE)
-        self.ip4_entry = ctk.CTkEntry(
-                self,
-                fg_color='transparent',
-                text_color=BLUE)
-        self.ip5_entry = ctk.CTkEntry(
-                self,
-                fg_color='transparent',
-                text_color=BLUE)
+        self.ip_label.grid(
+                column=1,
+                row=0,
+                padx=10,
+                pady=10,
+                sticky='ew',
+                columnspan=5)
+
+        for i in range(len(self.ip_fields)):
+            self.ip_fields[i] = ctk.CTkEntry(
+                    self,
+                    fg_color='transparent',
+                    text_color=BLUE)
+
+            self.ip_fields[i].grid(
+                    column=i+1,
+                    row=1,
+                    padx=10,
+                    pady=10,
+                    sticky='ew')
 
         self.ip_menu = ctk.CTkOptionMenu(
                 self,
@@ -124,20 +126,7 @@ class ButtonsFrame(ctk.CTkFrame):
                 values=self.registered_ips
                 )
 
-        self.ip_label.grid(
-                column=1,
-                row=0,
-                padx=10,
-                pady=10,
-                sticky='ew',
-                columnspan=6)
-
-        self.ip1_entry.grid(column=1, row=1, padx=10, pady=10, sticky='ew')
-        self.ip2_entry.grid(column=2, row=1, padx=10, pady=10, sticky='ew')
-        self.ip3_entry.grid(column=3, row=1, padx=10, pady=10, sticky='ew')
-        self.ip4_entry.grid(column=4, row=1, padx=10, pady=10, sticky='ew')
-        self.ip5_entry.grid(column=5, row=1, padx=10, pady=10, sticky='ew')
-        self.ip_menu.grid(column=6, row=1, padx=10, pady=10, sticky='ew')
+        self.ip_menu.grid(column=5, row=1, padx=10, pady=10, sticky='ew')
 
         self.thresh_label = ctk.CTkLabel(
                 self,
@@ -175,7 +164,7 @@ class ButtonsFrame(ctk.CTkFrame):
                 padx=10,
                 pady=10,
                 sticky='ew',
-                columnspan=3)
+                columnspan=2)
 
         self.area_label.grid(
                 column=4,
@@ -183,7 +172,7 @@ class ButtonsFrame(ctk.CTkFrame):
                 padx=10,
                 pady=10,
                 sticky='ew',
-                columnspan=3)
+                columnspan=2)
 
         self.thresh_slider.grid(
                 column=1,
@@ -191,7 +180,7 @@ class ButtonsFrame(ctk.CTkFrame):
                 padx=10,
                 pady=10,
                 sticky='ew',
-                columnspan=3)
+                columnspan=2)
 
         self.area_slider.grid(
                 column=4,
@@ -199,19 +188,26 @@ class ButtonsFrame(ctk.CTkFrame):
                 padx=10,
                 pady=10,
                 sticky='ew',
-                columnspan=3)
+                columnspan=2)
 
-    def set_thresh_value(self):
-        pass
+    # SETTERs
 
-    def set_area_value(self):
-        pass
+    def set_thresh_value(self, value):
+        self.thresh = value
 
-    def load_ip(self):
-        pass
+    def set_area_value(self, value):
+        self.min_area = value
+
+    def set_ip(self):
+        self.ip = self.read_ip_fields()
+
+    # WIDGETs ACTIONS
 
     def save_ip(self):
-        pass
+        ip = self.read_ip_fields()
+        with open('../data/ips.txt', 'a') as file:
+            file.write(ip+'\n')
+        self.reload_ips()
 
     def connect_camera(self):
         pass
@@ -220,7 +216,53 @@ class ButtonsFrame(ctk.CTkFrame):
         pass
 
     def test_connection(self):
-        pass
+        self.set_ip()
+        try:
+            self.master.connect_camera(self.ip)
+            self.master.test_connection()
+            self.master.disconnect_camera()
+        except Exception:
+            self.master.test_connection(False)
+
+    def load_ip(self, choice):
+        self.set_ip()
+        self.update_ip_fields(choice)
+
+    # AUXILIAR METHODS
+
+    def update_ip_fields(self, choice):
+        ip_parts = []
+        ip = ''
+        for char in choice:
+            if char == '.':
+                ip_parts.append(ip)
+                ip = ''
+                continue
+            ip += char
+        ip_parts.append(ip)
+        self.delete_ip_fields()
+        self.write_ip_fields(ip_parts)
+
+    def write_ip_fields(self, ip_parts):
+        for i in range(4):
+            self.ip_fields[i].insert(0, ip_parts[i])
+
+    def delete_ip_fields(self):
+        for ip_field in self.ip_fields:
+            ip_field.delete(0, ctk.END)
+
+    def read_ip_fields(self):
+        ip = [str(ip_field.get()) for ip_field in self.ip_fields]
+        return '.'.join(ip)
+
+    def reload_ips(self):
+        with open('../data/ips.txt', 'r') as file:
+            ips = file.readlines()
+        self.registered_ips = [ip.strip() for ip in ips]
+        try:
+            self.ip_menu.configure(values=self.registered_ips)
+        except Exception:
+            pass
 
 
 class ImageFrame(ctk.CTkFrame):
@@ -247,6 +289,13 @@ class ImageFrame(ctk.CTkFrame):
     def show_image(self, image):
         pass
 
+    def set_message(self, val):
+        if val:
+            message = 'Test done, the camera is ready to use'
+        else:
+            message = 'Test uncomplete, the camera is not available\nCheck ip'
+        self.image_label.configure(text=message)
+
 
 class MainWindow(ctk.CTk):
 
@@ -268,6 +317,16 @@ class MainWindow(ctk.CTk):
 
         self.image_frame = ImageFrame(self)
         self.image_frame.grid(row=2, column=0, padx=30, pady=30, sticky='nesw')
+
+    def connect_camera(self, ip):
+        self.camera = Camera.Camera(ip)
+
+    def test_connection(self, is_ip=True):
+        val = self.camera.check_connection() if is_ip else False
+        self.image_frame.set_message(val)
+
+    def disconnect_camera(self):
+        del self.camera
 
 
 def main():

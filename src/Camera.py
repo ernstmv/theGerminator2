@@ -2,29 +2,25 @@ import cv2
 import requests
 import numpy as np
 import imutils
-import socket
+import subprocess
 
 
 class Camera():
     def __init__(self, ip):
         self.ip = ip
-        self.url = f'http://{self.ip}:8080/shot.jpg'
+        self.url = 'http://' + self.ip + ':8080/shot.jpg'
         self.port = 80
 
-    def check_conection(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(1)
+    def check_connection(self):
+        process = subprocess.Popen(
+                ['ping', '-c', '1', self.ip],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, error = process.communicate()
 
-        try:
-            result = sock.connect_ex((self.ip, self.port))
-            if result == 0:
-                return True
-            else:
-                return False
-        except Exception:
+        if process.returncode == 0:
+            return True
+        else:
             return False
-        finally:
-            sock.close()
 
     def get_image(self):
         img_resp = requests.get(self.url)
