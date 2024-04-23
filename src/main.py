@@ -1,4 +1,6 @@
+from tkinter import filedialog
 import customtkinter as ctk
+import cv2
 import Camera
 
 
@@ -210,7 +212,9 @@ class ButtonsFrame(ctk.CTkFrame):
         self.reload_ips()
 
     def connect_camera(self):
-        pass
+        self.set_ip()
+        self.master.connect_camera(self.ip)
+        self.master.run_video()
 
     def capture_image(self):
         pass
@@ -287,7 +291,7 @@ class ImageFrame(ctk.CTkFrame):
                 sticky='nesw')
 
     def show_image(self, image):
-        pass
+        self.image_label.configure(text='', image=image)
 
     def set_message(self, val):
         if val:
@@ -325,13 +329,23 @@ class MainWindow(ctk.CTk):
         val = self.camera.check_connection() if is_ip else False
         self.image_frame.set_message(val)
 
+    def run_video(self):
+        while 1:
+            image = self.camera.get_image()
+            image = self.camera.convert_image(image)
+            self.image_frame.show_image(image)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+            self.update()
+
+        self.camera.destroy_window()
+
     def disconnect_camera(self):
         del self.camera
 
 
 def main():
     ctk.set_appearance_mode("dark")
-
     app = MainWindow()
     app.mainloop()
 

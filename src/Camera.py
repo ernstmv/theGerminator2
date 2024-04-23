@@ -3,6 +3,8 @@ import requests
 import numpy as np
 import imutils
 import subprocess
+from PIL import Image
+import customtkinter as ctk
 
 
 class Camera():
@@ -26,8 +28,16 @@ class Camera():
         img_resp = requests.get(self.url)
         img_arr = np.array(bytearray(img_resp.content), dtype=np.uint8)
         img = cv2.imdecode(img_arr, -1)
-        img = imutils.resize(img, width=800, height=600)
+        img = imutils.resize(img, width=1000, height=1800)
         return img
+
+    def convert_image(self, image):
+        img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        img_pil = Image.fromarray(image)
+        img_ctk = ctk.CTkImage(
+                light_image=img_pil,
+                size=(img.shape[1], img.shape[0]))
+        return img_ctk
 
     def destroy_window():
         cv2.destroyAllWindows()
