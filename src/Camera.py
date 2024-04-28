@@ -38,6 +38,3 @@ class Camera():
                 light_image=img_pil,
                 size=(img.shape[1], img.shape[0]))
         return img_ctk
-
-    def destroy_window():
-        cv2.destroyAllWindows()

@@ -1,7 +1,6 @@
-from tkinter import filedialog
 import customtkinter as ctk
-import cv2
 import Camera
+import Identifier
 
 
 BLUE = '#04BFAD'
@@ -46,6 +45,9 @@ class ButtonsFrame(ctk.CTkFrame):
         self.reload_ips()
         self.ip = None
         self.ip_fields = [None] * 4
+
+        self.thresh_value = 127
+        self.min_area = 500
 
         self.save_ip_button = ctk.CTkButton(
                 self,
@@ -195,7 +197,7 @@ class ButtonsFrame(ctk.CTkFrame):
     # SETTERs
 
     def set_thresh_value(self, value):
-        self.thresh = value
+        self.thresh_value = value
 
     def set_area_value(self, value):
         self.min_area = value
@@ -330,15 +332,17 @@ class MainWindow(ctk.CTk):
         self.image_frame.set_message(val)
 
     def run_video(self):
+        ide = Identifier.Identifier()
         while 1:
             image = self.camera.get_image()
+            image = ide.set_image(image)
+            ide.identify_plants(
+                    self.buttons_frame.tresh_value,
+                    self.buttons_frame.min_area)
+            image.get_image()
             image = self.camera.convert_image(image)
             self.image_frame.show_image(image)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
             self.update()
-
-        self.camera.destroy_window()
 
     def disconnect_camera(self):
         del self.camera
