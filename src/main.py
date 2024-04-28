@@ -13,34 +13,88 @@ GREEN = '#558C03'
 DARK_GREEN = '#014017'
 
 
-class UpperFrame(ctk.CTkFrame):
+class SlidersFrame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
 
-        self.grid_columnconfigure((0), weight=1)
-        self.grid_rowconfigure((0, 1), weight=1)
+        self.grid_columnconfigure((0, 1), weight=1)
+        self.grid_rowconfigure((0, 1), weight=0)
 
-        self.main_label = ctk.CTkLabel(
+        self.thresh_label = ctk.CTkLabel(
                 self,
-                text='The Germinator',
-                font=('ProFont Nerd Font', 30),
-                fg_color='transparent')
-        self.main_label.grid(row=0, column=0, padx=10, pady=10, sticky='ew')
+                text='Theshold value',
+                fg_color='transparent',
+                text_color=GREEN,
+                anchor='center')
 
-        self.main_label2 = ctk.CTkLabel(
+        self.area_label = ctk.CTkLabel(
                 self,
-                text='by AGROMACH',
-                fg_color='transparent')
-        self.main_label2.grid(row=1, column=0, padx=10, pady=10, sticky='ew')
+                text='Minium area',
+                fg_color='transparent',
+                text_color=GREEN,
+                anchor='center')
+
+        self.thresh_slider = ctk.CTkSlider(
+                self,
+                command=self.set_thresh_value,
+                from_=0,
+                to=255,
+                fg_color=DARK_GREEN,
+                progress_color=GREEN)
+
+        self.area_slider = ctk.CTkSlider(
+                self,
+                command=self.set_area_value,
+                from_=0,
+                to=1000,
+                fg_color=DARK_GREEN,
+                progress_color=GREEN)
+
+        self.thresh_label.grid(
+                column=0,
+                row=0,
+                padx=10,
+                pady=10,
+                sticky='ew',
+                )
+
+        self.area_label.grid(
+                column=1,
+                row=0,
+                padx=10,
+                pady=10,
+                sticky='ew',
+                )
+
+        self.thresh_slider.grid(
+                column=0,
+                row=1,
+                padx=10,
+                pady=10,
+                sticky='ew',
+                )
+
+        self.area_slider.grid(
+                column=1,
+                row=1,
+                padx=10,
+                pady=10,
+                sticky='ew',
+                )
+
+    def set_thresh_value(self, value):
+        self.thresh_value = value
+
+    def set_area_value(self, value):
+        self.min_area = value
 
 
 class ButtonsFrame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master)
 
-        self.grid_columnconfigure((0), weight=1)
-        self.grid_columnconfigure((1, 2, 3, 4, 5, 6), weight=1)
-        self.grid_rowconfigure((0, 1, 2, 3), weight=1)
+        self.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
+        self.grid_rowconfigure((0, 1, 2), weight=1)
 
         self.reload_ips()
         self.ip = None
@@ -89,10 +143,21 @@ class ButtonsFrame(ctk.CTkFrame):
                 text='TEST',
                 command=self.test_connection)
 
-        self.save_ip_button.grid(column=0, row=0, padx=10, pady=10)
-        self.test_connection_button.grid(column=0, row=1, padx=10, pady=10)
-        self.capture_button.grid(column=0, row=2, padx=10, pady=10)
-        self.connect_button.grid(column=0, row=3, padx=10, pady=10)
+        self.build_button = ctk.CTkButton(
+                self,
+                border_width=2,
+                fg_color='transparent',
+                hover_color=DARK_GREEN,
+                border_color=GREEN,
+                text_color=GREEN,
+                text='BUILD',
+                command=self.build_model)
+
+        self.save_ip_button.grid(column=0, row=2, padx=10, pady=10)
+        self.test_connection_button.grid(column=1, row=2, padx=10, pady=10)
+        self.capture_button.grid(column=2, row=2, padx=10, pady=10)
+        self.connect_button.grid(column=3, row=2, padx=10, pady=10)
+        self.build_button.grid(column=4, row=2, padx=10, pady=10)
 
         self.ip_label = ctk.CTkLabel(
                 self,
@@ -101,7 +166,7 @@ class ButtonsFrame(ctk.CTkFrame):
                 text_color=BLUE)
 
         self.ip_label.grid(
-                column=1,
+                column=0,
                 row=0,
                 padx=10,
                 pady=10,
@@ -115,7 +180,7 @@ class ButtonsFrame(ctk.CTkFrame):
                     text_color=BLUE)
 
             self.ip_fields[i].grid(
-                    column=i+1,
+                    column=i,
                     row=1,
                     padx=10,
                     pady=10,
@@ -130,77 +195,9 @@ class ButtonsFrame(ctk.CTkFrame):
                 values=self.registered_ips
                 )
 
-        self.ip_menu.grid(column=5, row=1, padx=10, pady=10, sticky='ew')
+        self.ip_menu.grid(column=4, row=1, padx=10, pady=10, sticky='ew')
 
-        self.thresh_label = ctk.CTkLabel(
-                self,
-                text='Theshold value',
-                fg_color='transparent',
-                text_color=GREEN,
-                anchor='center')
-
-        self.area_label = ctk.CTkLabel(
-                self,
-                text='Minium area',
-                fg_color='transparent',
-                text_color=GREEN,
-                anchor='center')
-
-        self.thresh_slider = ctk.CTkSlider(
-                self,
-                command=self.set_thresh_value,
-                from_=0,
-                to=255,
-                fg_color=DARK_GREEN,
-                progress_color=GREEN)
-
-        self.area_slider = ctk.CTkSlider(
-                self,
-                command=self.set_area_value,
-                from_=0,
-                to=1000,
-                fg_color=DARK_GREEN,
-                progress_color=GREEN)
-
-        self.thresh_label.grid(
-                column=1,
-                row=2,
-                padx=10,
-                pady=10,
-                sticky='ew',
-                columnspan=2)
-
-        self.area_label.grid(
-                column=4,
-                row=2,
-                padx=10,
-                pady=10,
-                sticky='ew',
-                columnspan=2)
-
-        self.thresh_slider.grid(
-                column=1,
-                row=3,
-                padx=10,
-                pady=10,
-                sticky='ew',
-                columnspan=2)
-
-        self.area_slider.grid(
-                column=4,
-                row=3,
-                padx=10,
-                pady=10,
-                sticky='ew',
-                columnspan=2)
-
-    # SETTERs
-
-    def set_thresh_value(self, value):
-        self.thresh_value = value
-
-    def set_area_value(self, value):
-        self.min_area = value
+    # SETTERS
 
     def set_ip(self):
         self.ip = self.read_ip_fields()
@@ -233,6 +230,9 @@ class ButtonsFrame(ctk.CTkFrame):
     def load_ip(self, choice):
         self.set_ip()
         self.update_ip_fields(choice)
+
+    def build_model(self):
+        pass
 
     # AUXILIAR METHODS
 
@@ -315,11 +315,11 @@ class MainWindow(ctk.CTk):
         self.grid_rowconfigure((0, 1), weight=0)
         self.grid_rowconfigure((2), weight=1)
 
-        self.upper_frame = UpperFrame(self)
-        self.upper_frame.grid(row=0, column=0, padx=10, pady=10, sticky='ew')
-
         self.buttons_frame = ButtonsFrame(self)
-        self.buttons_frame.grid(row=1, column=0, padx=10, pady=10, sticky='ew')
+        self.buttons_frame.grid(row=0, column=0, padx=10, pady=10, sticky='ew')
+
+        self.upper_frame = SlidersFrame(self)
+        self.upper_frame.grid(row=1, column=0, padx=10, pady=10, sticky='ew')
 
         self.image_frame = ImageFrame(self)
         self.image_frame.grid(row=2, column=0, padx=30, pady=30, sticky='nesw')
@@ -337,8 +337,8 @@ class MainWindow(ctk.CTk):
             image = self.camera.get_image()
             image = ide.set_image(image)
             ide.identify_plants(
-                    self.buttons_frame.tresh_value,
-                    self.buttons_frame.min_area)
+                    self.SlidersFrame.tresh_value,
+                    self.SlidersFrame.min_area)
             image.get_image()
             image = self.camera.convert_image(image)
             self.image_frame.show_image(image)
