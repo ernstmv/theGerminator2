@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from sklearn.cluster import KMeans
 
 
 class Identifier:
@@ -9,61 +10,176 @@ class Identifier:
 
     def set_image(self, img):
         self.img = img
+        self.mask = np.zeros_like(self.img)
 
     def get_image(self):
-        return self.img
+        return self.img  # RETURNS MASK, MUST BE CHANGED
 
     def get_plants_coordinates(self):
         return self.plants_centers
 
-    def identify_lines(self):
-        gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-        edges = cv2.Canny(gray, 220, 250, apertureSize=3)
+    def write_data(self):
+        total_plants = len(self.plants) if self.plants is not None else 0
+        cv2.putText(
+                self.mask,
+                f'Plants: {total_plants}',
+                (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 0, 0),
+                1)
 
+        cv2.putText(
+                self.mask,
+                'Tray size: PENDING',
+                (100, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (0, 0, 255),
+                1)
+
+    def identify_tray(self, thresh_value):
+
+        gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
+
+        _, thresh = cv2.threshold(
+                gray,
+                thresh_value,
+                255,
+                cv2.THRESH_BINARY_INV)
+
+        conts, _ = cv2.findContours(
+                thresh,
+                cv2.RETR_EXTERNAL,
+                cv2.CHAIN_APPROX_NONE)
+
+        conts = {cv2.contourArea(cont): cont for cont in conts}
+
+        try:
+            self.tray = conts[max(conts.keys())]
+        except Exception:
+            return None
+
+        cv2.drawContours(
+                self.mask,
+                self.tray,
+                -1,
+                (0, 0, 255),
+                2)
+
+        _, _, b = cv2.split(self.mask)
+        edges = cv2.Canny(b, 50, 150)
         lines = cv2.HoughLinesP(
                 edges,
                 1,
                 np.pi/180,
                 100,
-                minLineLength=100,
-                maxLineGap=10)
+                minLineLength=500,
+                maxLineGap=200)
 
+        if lines is None:
+            return None
+
+        pos = []
         for line in lines:
-            x1, y1, x2, y2 = line[0]
-            cv2.line(
-                    self.img,
+            x, y, x1, y1 = line[0]
+            coord = [x, y]
+            pos.append(coord)
+            coord = [x1, y1]
+            pos.append(coord)
+            cv2.circle(
+                    self.mask,
+                    (x, y),
+                    5,
+                    (255, 255, 0),
+                    3)
+
+            cv2.circle(
+                    self.mask,
                     (x1, y1),
-                    (x2, y2),
+                    5,
+                    (255, 255, 0),
+                    3)
+
+        pos = np.array(pos)
+
+        kmeans = KMeans(n_clusters=4)
+        kmeans.fit(pos)
+
+        centers = kmeans.cluster_centers_
+        for center in centers:
+            cv2.circle(
+                    self.mask,
+                    (int(center[0]), int(center[1])),
+                    5,
                     (255, 0, 0),
-                    1,
-                    cv2.LINE_AA)
+                    3)
+
+        cv2.line(
+                self.mask,
+                (int(centers[0][0]), int(centers[0][1])),
+                (int(centers[1][0]), int(centers[1][1])),
+                (255, 0, 0),
+                2)
+
+        cv2.line(
+                self.mask,
+                (int(centers[1][0]), int(centers[1][1])),
+                (int(centers[2][0]), int(centers[2][1])),
+                (255, 0, 0),
+                2)
+
+        cv2.line(
+                self.mask,
+                (int(centers[2][0]), int(centers[2][1])),
+                (int(centers[3][0]), int(centers[3][1])),
+                (255, 0, 0),
+                2)
+
+        cv2.line(
+                self.mask,
+                (int(centers[3][0]), int(centers[3][1])),
+                (int(centers[0][0]), int(centers[0][1])),
+                (255, 0, 0),
+                2)
 
     def identify_plants(self, thresh_value, min_area):
 
-        green_layer = self.img[:, :, 1]
+        if self.tray is None:
+            return None
+
+        x, y, w, h = cv2.boundingRect(self.tray)
+        d_matrix = np.array([[1, 0, x],
+                            [0, 1, y]], dtype=np.float32)
+        img = self.img[y:y+h, x:x+w]
+
+        _, green, _ = cv2.split(img)
+        green_layer = cv2.medianBlur(green, 5)
+
         _, g_thresh = cv2.threshold(
                 green_layer,
                 thresh_value,
                 255,
                 cv2.THRESH_BINARY)
+
         plants, _ = cv2.findContours(
                 g_thresh,
                 cv2.RETR_EXTERNAL,
                 cv2.CHAIN_APPROX_NONE)
-        plants = [x for x in plants if cv2.contourArea(x) > min_area]
 
-        mask = np.zeros_like(self.img)
+        self.plants = [x for x in plants if cv2.contourArea(x) > min_area]
+
+        if self.plants is None:
+            return None
+
+        self.plants = [cv2.transform(p, d_matrix) for p in self.plants]
+
         cv2.drawContours(
-                mask,
-                plants,
+                self.mask,
+                self.plants,
                 -1,
-                (22, 224, 36),
+                (0, 255, 0),
                 -1)
 
-        self.img = cv2.addWeighted(self.img, 0.6, mask, 0.8, 0)
-
-        self.plants_centers = []
-
-        for plant in plants:
-            center, _ = cv2.minEnclosingCircle(plant)
-            self.plants_centers.append(tuple(map(int, center)))
+    def add_mask(self):
+        self.img = cv2.addWeighted(self.img, 0.6, self.mask, 0.8, 0)

@@ -20,6 +20,10 @@ class SlidersFrame(ctk.CTkFrame):
         self.grid_columnconfigure((0, 1), weight=1)
         self.grid_rowconfigure((0, 1), weight=0)
 
+        self.thresh_value = 127
+        self.min_area = 500
+        self.thresh_lines_value = 127
+
         self.thresh_label = ctk.CTkLabel(
                 self,
                 text='Theshold value',
@@ -33,6 +37,22 @@ class SlidersFrame(ctk.CTkFrame):
                 fg_color='transparent',
                 text_color=GREEN,
                 anchor='center')
+
+        self.thresh_lines_label = ctk.CTkLabel(
+                self,
+                text='Lines threshold',
+                fg_color='transparent',
+                text_color=GREEN,
+                anchor='center')
+
+        self.thresh_lines_slider = ctk.CTkSlider(
+                self,
+                command=self.set_thresh_lines_value,
+                from_=0,
+                to=255,
+                fg_color=DARK_GREEN,
+                progress_color=GREEN
+                )
 
         self.thresh_slider = ctk.CTkSlider(
                 self,
@@ -49,6 +69,22 @@ class SlidersFrame(ctk.CTkFrame):
                 to=1000,
                 fg_color=DARK_GREEN,
                 progress_color=GREEN)
+
+        self.thresh_lines_label.grid(
+                column=0,
+                row=2,
+                padx=10,
+                pady=10,
+                sticky='ew',
+                columnspan=2)
+
+        self.thresh_lines_slider.grid(
+                column=0,
+                row=3,
+                padx=10,
+                pady=10,
+                sticky='ew',
+                columnspan=2)
 
         self.thresh_label.grid(
                 column=0,
@@ -88,6 +124,9 @@ class SlidersFrame(ctk.CTkFrame):
     def set_area_value(self, value):
         self.min_area = value
 
+    def set_thresh_lines_value(self, value):
+        self.thresh_lines_value = int(value)
+
 
 class ButtonsFrame(ctk.CTkFrame):
     def __init__(self, master):
@@ -99,9 +138,6 @@ class ButtonsFrame(ctk.CTkFrame):
         self.reload_ips()
         self.ip = None
         self.ip_fields = [None] * 4
-
-        self.thresh_value = 127
-        self.min_area = 500
 
         self.save_ip_button = ctk.CTkButton(
                 self,
@@ -120,18 +156,18 @@ class ButtonsFrame(ctk.CTkFrame):
                 hover_color=DARK_RED,
                 border_color=RED,
                 text_color=RED,
-                text='RUN',
+                text='CONNECT',
                 command=self.connect_camera)
 
-        self.capture_button = ctk.CTkButton(
+        self.disconnect_button = ctk.CTkButton(
                 self,
                 border_width=2,
                 fg_color='transparent',
                 hover_color=DARK_RED,
                 border_color=RED,
                 text_color=RED,
-                text='CAPTURE',
-                command=self.capture_image)
+                text='DISCONNECT',
+                command=self.disconnect)
 
         self.test_connection_button = ctk.CTkButton(
                 self,
@@ -155,7 +191,7 @@ class ButtonsFrame(ctk.CTkFrame):
 
         self.save_ip_button.grid(column=0, row=2, padx=10, pady=10)
         self.test_connection_button.grid(column=1, row=2, padx=10, pady=10)
-        self.capture_button.grid(column=2, row=2, padx=10, pady=10)
+        self.disconnect_button.grid(column=2, row=2, padx=10, pady=10)
         self.connect_button.grid(column=3, row=2, padx=10, pady=10)
         self.build_button.grid(column=4, row=2, padx=10, pady=10)
 
@@ -215,7 +251,8 @@ class ButtonsFrame(ctk.CTkFrame):
         self.master.connect_camera(self.ip)
         self.master.run_video()
 
-    def capture_image(self):
+    def disconnect(self):
+        self.master.disconnect_camera()
         pass
 
     def test_connection(self):
@@ -308,7 +345,7 @@ class MainWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.geometry('1000x1000')
+        self.geometry('800x900')
         self.resizable(width=False, height=False)
         self.title('The Germinator')
         self.grid_columnconfigure((0), weight=1)
@@ -318,8 +355,8 @@ class MainWindow(ctk.CTk):
         self.buttons_frame = ButtonsFrame(self)
         self.buttons_frame.grid(row=0, column=0, padx=10, pady=10, sticky='ew')
 
-        self.upper_frame = SlidersFrame(self)
-        self.upper_frame.grid(row=1, column=0, padx=10, pady=10, sticky='ew')
+        self.sliders_frame = SlidersFrame(self)
+        self.sliders_frame.grid(row=1, column=0, padx=10, pady=10, sticky='ew')
 
         self.image_frame = ImageFrame(self)
         self.image_frame.grid(row=2, column=0, padx=30, pady=30, sticky='nesw')
@@ -333,18 +370,26 @@ class MainWindow(ctk.CTk):
 
     def run_video(self):
         ide = Identifier.Identifier()
+        self.stop = False
         while 1:
             image = self.camera.get_image()
             image = ide.set_image(image)
+            ide.identify_tray(self.sliders_frame.thresh_lines_value)
             ide.identify_plants(
-                    self.SlidersFrame.tresh_value,
-                    self.SlidersFrame.min_area)
-            image.get_image()
+                    self.sliders_frame.thresh_value,
+                    self.sliders_frame.min_area)
+            ide.write_data()
+            ide.add_mask()
+            image = ide.get_image()
             image = self.camera.convert_image(image)
             self.image_frame.show_image(image)
             self.update()
 
+            if self.stop:
+                break
+
     def disconnect_camera(self):
+        self.stop = True
         del self.camera
 
 

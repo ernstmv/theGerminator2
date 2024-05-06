@@ -28,8 +28,8 @@ class Camera():
         img_resp = requests.get(self.url)
         img_arr = np.array(bytearray(img_resp.content), dtype=np.uint8)
         img = cv2.imdecode(img_arr, -1)
-        img = imutils.resize(img, width=1000, height=1800)
-        return img
+        img = imutils.resize(img, width=700, height=1300)
+        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     def convert_image(self, image):
         img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)

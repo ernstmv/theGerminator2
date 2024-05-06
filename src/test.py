@@ -1,25 +1,24 @@
 import cv2
-import Identifier
+import numpy as np
 
+# Cargar la imagen
+imagen = cv2.imread('../imgs/green.jpg')
 
-def show(img):
-    cv2.imshow('img', img)
-    cv2.waitKey(0)
+# Convertir la imagen de BGR a HSV
+imagen_hsv = cv2.cvtColor(imagen, cv2.COLOR_BGR2HSV)
 
+# Definir el rango de colores verde en HSV
+verde_bajo = np.array([40, 40, 40])  # Umbral mínimo para verde
+verde_alto = np.array([80, 255, 255])  # Umbral máximo para verde
 
-def main():
-    ide = Identifier.Identifier()
-    img = cv2.imread('../imgs/img1.jpeg')
-    dim = img.shape
-    img = cv2.resize(img, (int(dim[1]*0.5), int(dim[0]*0.5)), cv2.INTER_AREA)
-    im = cv2.Canny(img, 220, 250, apertureSize=3)
-    show(im)
-    ide.set_image(img)
-    ide.identify_plants(200, 100)
-    ide.identify_lines()
-    img = ide.get_image()
-    show(img)
+# Crear una máscara utilizando el rango de colores verde
+mascara = cv2.inRange(imagen_hsv, verde_bajo, verde_alto)
 
+# Aplicar la máscara a la imagen original
+imagen_con_mascara = cv2.bitwise_and(imagen, imagen, mask=mascara)
 
-if __name__ == '__main__':
-    main()
+# Mostrar la imagen original, la máscara y la imagen con la máscara aplicada
+cv2.imshow('Imagen con Mascara', imagen_con_mascara)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
