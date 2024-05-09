@@ -1,76 +1,45 @@
 import customtkinter as ctk
+import Autoset
 import Camera
 import Identifier
-
-
-BLUE = '#04BFAD'
-DARK_BLUE = '#014040'
-
-RED = '#D90404'
-DARK_RED = '#400101'
-
-GREEN = '#558C03'
-DARK_GREEN = '#014017'
+from constructor import menu, entrys, label, slider, button, COLORS
 
 
 class SlidersFrame(ctk.CTkFrame):
     def __init__(self, master):
-        super().__init__(master)
+        super().__init__(master, border_width=2, border_color=COLORS[-2])
+        self.configure(fg_color=COLORS[-1])
 
         self.grid_columnconfigure((0, 1), weight=1)
         self.grid_rowconfigure((0, 1), weight=0)
 
-        self.thresh_value = 127
-        self.min_area = 500
-        self.thresh_lines_value = 127
+        self.plants_thresh = 127
+        self.tray_thresh = 127
+        self.plants_min_area = 1000
 
-        self.thresh_label = ctk.CTkLabel(
-                self,
-                text='Theshold value',
-                fg_color='transparent',
-                text_color=GREEN,
-                anchor='center')
+        self.labels = [None] * 3
+        self.sliders = [None] * 3
 
-        self.area_label = ctk.CTkLabel(
-                self,
-                text='Minium area',
-                fg_color='transparent',
-                text_color=GREEN,
-                anchor='center')
+        s = [
+                'Plants threshold',
+                'Plants area',
+                'Tray threshold'
+                ]
 
-        self.thresh_lines_label = ctk.CTkLabel(
-                self,
-                text='Lines threshold',
-                fg_color='transparent',
-                text_color=GREEN,
-                anchor='center')
+        methods = [
+                self.set_plants_thresh,
+                self.set_plants_min_area,
+                self.set_tray_thresh]
 
-        self.thresh_lines_slider = ctk.CTkSlider(
-                self,
-                command=self.set_thresh_lines_value,
-                from_=0,
-                to=255,
-                fg_color=DARK_GREEN,
-                progress_color=GREEN
-                )
+        to_list = [255, 2000, 255]
 
-        self.thresh_slider = ctk.CTkSlider(
-                self,
-                command=self.set_thresh_value,
-                from_=0,
-                to=255,
-                fg_color=DARK_GREEN,
-                progress_color=GREEN)
+        for i in range(3):
+            self.labels[i] = label(self, s[i], 0)
+            self.sliders[i] = slider(self, methods[i], 0, to_list[i], 2)
 
-        self.area_slider = ctk.CTkSlider(
-                self,
-                command=self.set_area_value,
-                from_=0,
-                to=1000,
-                fg_color=DARK_GREEN,
-                progress_color=GREEN)
-
-        self.thresh_lines_label.grid(
+        self.labels[0].grid(column=0, row=0, padx=10, pady=10, sticky='ew')
+        self.labels[1].grid(column=1, row=0, padx=10, pady=10, sticky='ew')
+        self.labels[2].grid(
                 column=0,
                 row=2,
                 padx=10,
@@ -78,7 +47,9 @@ class SlidersFrame(ctk.CTkFrame):
                 sticky='ew',
                 columnspan=2)
 
-        self.thresh_lines_slider.grid(
+        self.sliders[0].grid(column=0, row=1, padx=10, pady=10, sticky='ew')
+        self.sliders[1].grid(column=1, row=1, padx=10, pady=10, sticky='ew')
+        self.sliders[2].grid(
                 column=0,
                 row=3,
                 padx=10,
@@ -86,151 +57,65 @@ class SlidersFrame(ctk.CTkFrame):
                 sticky='ew',
                 columnspan=2)
 
-        self.thresh_label.grid(
-                column=0,
-                row=0,
-                padx=10,
-                pady=10,
-                sticky='ew',
-                )
+    def set_plants_thresh(self, value):
+        self.plants_thresh = value
 
-        self.area_label.grid(
-                column=1,
-                row=0,
-                padx=10,
-                pady=10,
-                sticky='ew',
-                )
+    def set_plants_min_area(self, value):
+        self.plants_min_area = value
 
-        self.thresh_slider.grid(
-                column=0,
-                row=1,
-                padx=10,
-                pady=10,
-                sticky='ew',
-                )
-
-        self.area_slider.grid(
-                column=1,
-                row=1,
-                padx=10,
-                pady=10,
-                sticky='ew',
-                )
-
-    def set_thresh_value(self, value):
-        self.thresh_value = value
-
-    def set_area_value(self, value):
-        self.min_area = value
-
-    def set_thresh_lines_value(self, value):
-        self.thresh_lines_value = int(value)
+    def set_tray_thresh(self, value):
+        self.tray_thresh = value
 
 
 class ButtonsFrame(ctk.CTkFrame):
     def __init__(self, master):
-        super().__init__(master)
+        super().__init__(master, border_width=2, border_color=COLORS[-2])
 
         self.grid_columnconfigure((0, 1, 2, 3, 4), weight=1)
-        self.grid_rowconfigure((0, 1, 2), weight=1)
+        self.grid_rowconfigure((0, 1, 2, 3), weight=1)
+        self.configure(fg_color='#0D0D0D')
 
         self.reload_ips()
         self.ip = None
-        self.ip_fields = [None] * 4
 
-        self.save_ip_button = ctk.CTkButton(
-                self,
-                border_width=2,
-                fg_color='transparent',
-                hover_color=DARK_BLUE,
-                border_color=BLUE,
-                text_color=BLUE,
-                text='SAVE IP',
-                command=self.save_ip)
+        self.fields = [None] * 4
+        self.buttons = [None] * 5
 
-        self.connect_button = ctk.CTkButton(
-                self,
-                border_width=2,
-                fg_color='transparent',
-                hover_color=DARK_RED,
-                border_color=RED,
-                text_color=RED,
-                text='CONNECT',
-                command=self.connect_camera)
+        sb = [
+                'SAVE IP',
+                'CONNECT',
+                'DISCONNECT',
+                'TEST',
+                'BUILD']
 
-        self.disconnect_button = ctk.CTkButton(
-                self,
-                border_width=2,
-                fg_color='transparent',
-                hover_color=DARK_RED,
-                border_color=RED,
-                text_color=RED,
-                text='DISCONNECT',
-                command=self.disconnect)
+        m = [
+                self.save_ip,
+                self.connect,
+                self.disconnect,
+                self.test,
+                self.build]
 
-        self.test_connection_button = ctk.CTkButton(
-                self,
-                border_width=2,
-                fg_color='transparent',
-                hover_color=DARK_GREEN,
-                border_color=GREEN,
-                text_color=GREEN,
-                text='TEST',
-                command=self.test_connection)
+        for i in range(5):
+            self.buttons[i] = button(self, 0, sb[i], m[i])
+            self.buttons[i].grid(column=i, row=2, padx=10, pady=10)
 
-        self.build_button = ctk.CTkButton(
-                self,
-                border_width=2,
-                fg_color='transparent',
-                hover_color=DARK_GREEN,
-                border_color=GREEN,
-                text_color=GREEN,
-                text='BUILD',
-                command=self.build_model)
-
-        self.save_ip_button.grid(column=0, row=2, padx=10, pady=10)
-        self.test_connection_button.grid(column=1, row=2, padx=10, pady=10)
-        self.disconnect_button.grid(column=2, row=2, padx=10, pady=10)
-        self.connect_button.grid(column=3, row=2, padx=10, pady=10)
-        self.build_button.grid(column=4, row=2, padx=10, pady=10)
-
-        self.ip_label = ctk.CTkLabel(
-                self,
-                text='IP DIRECTION',
-                fg_color='transparent',
-                text_color=BLUE)
-
-        self.ip_label.grid(
+        self.auto_button = button(self, 0, 'AUTOSET', self.autoset_img)
+        self.auto_button.grid(
                 column=0,
-                row=0,
+                row=3,
                 padx=10,
                 pady=10,
                 sticky='ew',
                 columnspan=5)
 
-        for i in range(len(self.ip_fields)):
-            self.ip_fields[i] = ctk.CTkEntry(
-                    self,
-                    fg_color='transparent',
-                    text_color=BLUE)
+        self.label = label(self, 'IP DIRECTION', 0)
+        self.label.grid(column=2, row=0, padx=10, pady=10, sticky='ew')
 
-            self.ip_fields[i].grid(
-                    column=i,
-                    row=1,
-                    padx=10,
-                    pady=10,
-                    sticky='ew')
+        for i in range(4):
+            self.fields[i] = entrys(self, 0)
+            self.fields[i].grid(column=i, row=1, padx=10, pady=10, sticky='ew')
 
-        self.ip_menu = ctk.CTkOptionMenu(
-                self,
-                button_color=BLUE,
-                button_hover_color=DARK_BLUE,
-                text_color=BLUE,
-                command=self.load_ip,
-                values=self.registered_ips
-                )
-
+        self.ip_menu = menu(self, 0, self.load_ip, self.registered_ips)
         self.ip_menu.grid(column=4, row=1, padx=10, pady=10, sticky='ew')
 
     # SETTERS
@@ -239,23 +124,27 @@ class ButtonsFrame(ctk.CTkFrame):
         self.ip = self.read_ip_fields()
 
     # WIDGETs ACTIONS
+    #
+    def autoset_img(self):
+        self.set_ip()
+        self.master.connect_camera(self.ip)
+        self.master.autoset()
 
     def save_ip(self):
         ip = self.read_ip_fields()
-        with open('../data/ips.txt', 'a') as file:
+        with open('/home/sword/theGerminator/data/ips.txt', 'a') as file:
             file.write(ip+'\n')
         self.reload_ips()
 
-    def connect_camera(self):
+    def connect(self):
         self.set_ip()
         self.master.connect_camera(self.ip)
         self.master.run_video()
 
     def disconnect(self):
         self.master.disconnect_camera()
-        pass
 
-    def test_connection(self):
+    def test(self):
         self.set_ip()
         try:
             self.master.connect_camera(self.ip)
@@ -268,7 +157,7 @@ class ButtonsFrame(ctk.CTkFrame):
         self.set_ip()
         self.update_ip_fields(choice)
 
-    def build_model(self):
+    def build(self):
         pass
 
     # AUXILIAR METHODS
@@ -288,18 +177,18 @@ class ButtonsFrame(ctk.CTkFrame):
 
     def write_ip_fields(self, ip_parts):
         for i in range(4):
-            self.ip_fields[i].insert(0, ip_parts[i])
+            self.fields[i].insert(0, ip_parts[i])
 
     def delete_ip_fields(self):
-        for ip_field in self.ip_fields:
+        for ip_field in self.fields:
             ip_field.delete(0, ctk.END)
 
     def read_ip_fields(self):
-        ip = [str(ip_field.get()) for ip_field in self.ip_fields]
+        ip = [str(ip_field.get()) for ip_field in self.fields]
         return '.'.join(ip)
 
     def reload_ips(self):
-        with open('../data/ips.txt', 'r') as file:
+        with open('/home/sword/theGerminator/data/ips.txt', 'r') as file:
             ips = file.readlines()
         self.registered_ips = [ip.strip() for ip in ips]
         try:
@@ -310,7 +199,8 @@ class ButtonsFrame(ctk.CTkFrame):
 
 class ImageFrame(ctk.CTkFrame):
     def __init__(self, master):
-        super().__init__(master, border_width=2, border_color=GREEN)
+        super().__init__(master, border_width=2, border_color=COLORS[-2])
+        self.configure(fg_color=COLORS[-1])
 
         self.grid_columnconfigure((0), weight=1)
         self.grid_rowconfigure((0), weight=1)
@@ -319,7 +209,8 @@ class ImageFrame(ctk.CTkFrame):
                 self,
                 text='~ Please connect the camera ~',
                 fg_color='transparent',
-                text_color='GREEN',
+                text_color=COLORS[1],
+                font=('ProFont Windows Nerd Font', 20),
                 anchor='center'
                 )
         self.image_label.grid(
@@ -348,6 +239,8 @@ class MainWindow(ctk.CTk):
         self.geometry('800x900')
         self.resizable(width=False, height=False)
         self.title('The Germinator')
+        self.configure(fg_color=COLORS[-1])
+
         self.grid_columnconfigure((0), weight=1)
         self.grid_rowconfigure((0, 1), weight=0)
         self.grid_rowconfigure((2), weight=1)
@@ -373,14 +266,28 @@ class MainWindow(ctk.CTk):
         self.stop = False
         while 1:
             image = self.camera.get_image()
-            image = ide.set_image(image)
-            ide.identify_tray(self.sliders_frame.thresh_lines_value)
-            ide.identify_plants(
-                    self.sliders_frame.thresh_value,
-                    self.sliders_frame.min_area)
-            ide.write_data()
-            ide.add_mask()
+            ide.set_image(image)
+            ide.identify(
+                    self.sliders_frame.tray_thresh,
+                    self.sliders_frame.plants_thresh,
+                    self.sliders_frame.plants_min_area)
             image = ide.get_image()
+            image = self.camera.convert_image(image)
+            self.image_frame.show_image(image)
+            self.update()
+
+            if self.stop:
+                break
+
+    def autoset(self):
+        auto = Autoset.Auto()
+        self.stop = False
+        while 1:
+            image = self.camera.get_image()
+            auto.set_image(image)
+            if auto.auto_run():
+                self.stop = True
+            image = auto.get_image()
             image = self.camera.convert_image(image)
             self.image_frame.show_image(image)
             self.update()
@@ -393,11 +300,7 @@ class MainWindow(ctk.CTk):
         del self.camera
 
 
-def main():
+if __name__ == '__main__':
     ctk.set_appearance_mode("dark")
     app = MainWindow()
     app.mainloop()
-
-
-if __name__ == '__main__':
-    main()
