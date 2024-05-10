@@ -1,70 +1,7 @@
 import customtkinter as ctk
 import Autoset
 import Camera
-import Identifier
-from constructor import menu, entrys, label, slider, button, COLORS
-
-
-class SlidersFrame(ctk.CTkFrame):
-    def __init__(self, master):
-        super().__init__(master, border_width=2, border_color=COLORS[-2])
-        self.configure(fg_color=COLORS[-1])
-
-        self.grid_columnconfigure((0, 1), weight=1)
-        self.grid_rowconfigure((0, 1), weight=0)
-
-        self.plants_thresh = 127
-        self.tray_thresh = 127
-        self.plants_min_area = 1000
-
-        self.labels = [None] * 3
-        self.sliders = [None] * 3
-
-        s = [
-                'Plants threshold',
-                'Plants area',
-                'Tray threshold'
-                ]
-
-        methods = [
-                self.set_plants_thresh,
-                self.set_plants_min_area,
-                self.set_tray_thresh]
-
-        to_list = [255, 2000, 255]
-
-        for i in range(3):
-            self.labels[i] = label(self, s[i], 0)
-            self.sliders[i] = slider(self, methods[i], 0, to_list[i], 2)
-
-        self.labels[0].grid(column=0, row=0, padx=10, pady=10, sticky='ew')
-        self.labels[1].grid(column=1, row=0, padx=10, pady=10, sticky='ew')
-        self.labels[2].grid(
-                column=0,
-                row=2,
-                padx=10,
-                pady=10,
-                sticky='ew',
-                columnspan=2)
-
-        self.sliders[0].grid(column=0, row=1, padx=10, pady=10, sticky='ew')
-        self.sliders[1].grid(column=1, row=1, padx=10, pady=10, sticky='ew')
-        self.sliders[2].grid(
-                column=0,
-                row=3,
-                padx=10,
-                pady=10,
-                sticky='ew',
-                columnspan=2)
-
-    def set_plants_thresh(self, value):
-        self.plants_thresh = value
-
-    def set_plants_min_area(self, value):
-        self.plants_min_area = value
-
-    def set_tray_thresh(self, value):
-        self.tray_thresh = value
+from constructor import menu, entrys, label, button, COLORS
 
 
 class ButtonsFrame(ctk.CTkFrame):
@@ -207,7 +144,7 @@ class ImageFrame(ctk.CTkFrame):
 
         self.image_label = ctk.CTkLabel(
                 self,
-                text='~ Please connect the camera ~',
+                text='~ Please set up a camera ~',
                 fg_color='transparent',
                 text_color=COLORS[1],
                 font=('ProFont Windows Nerd Font', 20),
@@ -225,9 +162,9 @@ class ImageFrame(ctk.CTkFrame):
 
     def set_message(self, val):
         if val:
-            message = 'Test done, the camera is ready to use'
+            message = 'Test done, the device is online'
         else:
-            message = 'Test uncomplete, the camera is not available\nCheck ip'
+            message = 'Test uncomplete, the device is not available\nCheck ip'
         self.image_label.configure(text=message)
 
 
@@ -242,17 +179,14 @@ class MainWindow(ctk.CTk):
         self.configure(fg_color=COLORS[-1])
 
         self.grid_columnconfigure((0), weight=1)
-        self.grid_rowconfigure((0, 1), weight=0)
-        self.grid_rowconfigure((2), weight=1)
+        self.grid_rowconfigure((0), weight=0)
+        self.grid_rowconfigure((1), weight=1)
 
         self.buttons_frame = ButtonsFrame(self)
         self.buttons_frame.grid(row=0, column=0, padx=10, pady=10, sticky='ew')
 
-        self.sliders_frame = SlidersFrame(self)
-        self.sliders_frame.grid(row=1, column=0, padx=10, pady=10, sticky='ew')
-
         self.image_frame = ImageFrame(self)
-        self.image_frame.grid(row=2, column=0, padx=30, pady=30, sticky='nesw')
+        self.image_frame.grid(row=1, column=0, padx=30, pady=30, sticky='nesw')
 
     def connect_camera(self, ip):
         self.camera = Camera.Camera(ip)
@@ -262,16 +196,9 @@ class MainWindow(ctk.CTk):
         self.image_frame.set_message(val)
 
     def run_video(self):
-        ide = Identifier.Identifier()
         self.stop = False
         while 1:
             image = self.camera.get_image()
-            ide.set_image(image)
-            ide.identify(
-                    self.sliders_frame.tray_thresh,
-                    self.sliders_frame.plants_thresh,
-                    self.sliders_frame.plants_min_area)
-            image = ide.get_image()
             image = self.camera.convert_image(image)
             self.image_frame.show_image(image)
             self.update()
