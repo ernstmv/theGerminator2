@@ -4,11 +4,17 @@ from sklearn.cluster import KMeans
 import numpy as np
 
 
+def g_radius(cont):
+    ((x, y), radius) = cv2.minEnclosingCircle(cont)
+    return radius
+
+
 class Auto:
 
     def __init__(self):
         self.kernel = 11
-        self.margin = 2
+        self.r = 0
+        self.c = 2
         self.change = False
 
     def set_image(self, img):
@@ -19,9 +25,10 @@ class Auto:
         self.img = cv2.addWeighted(self.img, 0.6, self.mask, 0.8, 0)
         return self.img
 
-    def autoset(self):
+    def autoset_tray(self):
 
         gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (31, 31), 0)
 
         thresh = cv2.adaptiveThreshold(
                 gray,
@@ -29,7 +36,7 @@ class Auto:
                 cv2.ADAPTIVE_THRESH_MEAN_C,
                 cv2.THRESH_BINARY_INV,
                 self.kernel,
-                2)
+                self.c)
 
         conts, _ = cv2.findContours(
                 thresh,
@@ -54,7 +61,7 @@ class Auto:
                 self.tray,
                 -1,
                 (0, 0, 255),
-                10)
+                20)
 
         _, _, b = cv2.split(mask)
         edges = cv2.Canny(b, 50, 150)
@@ -63,8 +70,8 @@ class Auto:
                 1,
                 np.pi/180,
                 100,
-                minLineLength=300,
-                maxLineGap=200)
+                minLineLength=500,
+                maxLineGap=300)
 
         if lines is None:
             return None
@@ -78,14 +85,14 @@ class Auto:
                     self.mask,
                     (x, y),
                     5,
-                    (0, 255, 0),
+                    (255, 255, 0),
                     3)
 
             cv2.circle(
                     self.mask,
                     (x1, y1),
                     5,
-                    (0, 255, 0),
+                    (255, 255, 0),
                     3)
 
         if len(pos) < 4 or pos is None:
@@ -94,7 +101,7 @@ class Auto:
         kmeans = KMeans(n_clusters=4)
         kmeans.fit(np.array(pos))
 
-        self.centers = kmeans.cluster_self.centers_
+        self.centers = kmeans.cluster_centers_
         colors = []
 
         for i in range(-1, 3):
@@ -102,22 +109,30 @@ class Auto:
             c = self.centers[i]
             slope = []
 
-            distances = {dist(c, cent): cent for cent in self.centers}
+            dists = {dist(c, cent): cent for cent in self.centers}
 
-            for distance in distances:
-                if distance == 0 or distance == max(distances.keys()):
+            for distance in dists:
+                if distance == 0 or distance == max(dists.keys()):
                     continue
-                x = [c[0], distances[distance][0]]
-                y = [c[1], distances[distance][1]]
+                x = [c[0], dists[distance][0]]
+                y = [c[1], dists[distance][1]]
 
                 m, _ = np.polyfit(x, y, 1)
                 slope.append(m)
 
+                cv2.line(
+                        self.mask,
+                        (int(c[0]), int(c[1])),
+                        (int(dists[distance][0]), int(dists[distance][1])),
+                        (255, 0, 0),
+                        2)
+            if len(slope) < 2:
+                return None
             angle = degrees(atan((slope[1] - slope[0])/(1+slope[1]*slope[0])))
             color = (0, 0, 0)
             angle = abs(angle)
 
-            if angle < 90 + self.margin and angle > 90 - self.margin:
+            if angle < 94 and angle > 86:
                 color = (255, 0, 255)
                 colors.append(510)
 
@@ -128,34 +143,59 @@ class Auto:
                     color,
                     3)
 
-            cv2.putText(
-                    self.mask,
-                    f'{i+1}',
-                    (int(self.centers[i][0]), int(self.centers[i][1])),
-                    1,
-                    2,
-                    (255, 127, 127))
-
-            cv2.line(
-                    self.mask,
-                    (int(self.centers[i-1][0]), int(self.centers[i-1][1])),
-                    (int(self.centers[i][0]), int(self.centers[i][1])),
-                    (255, 0, 0),
-                    2)
         return sum(colors) == 510 * 4
 
-    def auto_run(self):
-        if self.autoset():
+    def detect_tray(self):
+        if self.autoset_tray():
             return True
         elif self.change is False:
-            if self.kernel < 35:
+            if self.kernel < 51:
                 self.kernel += 2
             else:
-                self.kernel = 11
+                self.kernel = 3
             self.change = True
         else:
-            if self.margin < 5:
-                self.margin += 1
+            if self.c < 5:
+                self.c += 0.1
             else:
-                self.margin = 2
+                self.c = 2
                 self.change = False
+
+    def autoset_plants(self):
+        conts, _ = cv2.findContours(
+                self.plants_mask,
+                cv2.RETR_EXTERNAL,
+                cv2.CHAIN_APPROX_NONE)
+
+        rads = [g_radius(c) for c in conts]
+        mode = (max(rads) + min(rads)) / 2
+
+        self.p = [p for p in conts if g_radius(p) > mode * 0.5]
+        self.p = [p for p in self.p if g_radius(p) < mode * 1.5]
+
+    def set_plants_mask(self):
+        hsv = cv2.cvtColor(self.img, cv2.COLOR_RGB2HSV)
+        hsv[:, :, 2] = hsv[:, :, 2] * 1.2
+
+        green_l = np.array([25, 40, 72])
+        green_h = np.array([102, 255, 255])
+
+        self.plants_mask = cv2.inRange(hsv, green_l, green_h)
+
+    def draw_plants(self):
+        for p in self.p:
+
+            ((x, y), radius) = cv2.minEnclosingCircle(p)
+            center = (int(x), int(y))
+            radius = int(radius)
+
+            cv2.circle(self.mask, center, radius, (0, 255, 0), 2)
+
+    def detect_plants(self):
+        self.set_plants_mask()
+        self.autoset_plants()
+        self.draw_plants()
+        return 'Done'
+
+    def process_data(self):
+        return len(self.p), 2, 3
