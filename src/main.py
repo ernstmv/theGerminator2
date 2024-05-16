@@ -1,4 +1,5 @@
 import customtkinter as ctk
+import Aux
 import Autoset
 import Camera
 from constructor import menu, entrys, label, button, COLORS
@@ -139,7 +140,7 @@ class ButtonsFrame(ctk.CTkFrame):
         self.update_ip_fields(choice)
 
     def launch(self):
-        pass
+        self.master.launch_data()
 
     # AUXILIAR METHODS
 
@@ -265,12 +266,12 @@ class MainWindow(ctk.CTk):
             self.auto.set_image(image)
             if self.auto.detect_tray():
                 self.auto.detect_plants()
-                np, ts, ptg = self.auto.process_data()
+                self.np, self.ts, self.ptg = self.auto.process_data()
                 self.dialog_frame.show_message(
                         n_message=-3,
-                        np=np,
-                        ts=ts,
-                        ptg=ptg)
+                        np=self.np,
+                        ts=self.ts,
+                        ptg=self.ptg)
                 self.stop = True
             image = self.auto.get_image()
             image = self.camera.convert_image(image)
@@ -284,6 +285,17 @@ class MainWindow(ctk.CTk):
     def disconnect_camera(self):
         self.stop = True
         del self.camera
+
+    def launch_data(self):
+        aux = Aux.Aux()
+        try:
+            aux.write_data(self.img, self.np, self.ts, self.ptg)
+            aux.send_data()
+            mssg = 'Data loaded'
+        except Exception as e:
+            mssg = 'FATAL ERROR: The data are unavailable\n' + e
+        finally:
+            self.dialog_frame.show_message(mssg)
 
 
 if __name__ == '__main__':

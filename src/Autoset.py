@@ -128,11 +128,12 @@ class Auto:
                         2)
             if len(slope) < 2:
                 return None
+
             angle = degrees(atan((slope[1] - slope[0])/(1+slope[1]*slope[0])))
             color = (0, 0, 0)
             angle = abs(angle)
 
-            if angle < 94 and angle > 86:
+            if angle < 95 and angle > 85:
                 color = (255, 0, 255)
                 colors.append(510)
 
@@ -167,11 +168,10 @@ class Auto:
                 cv2.RETR_EXTERNAL,
                 cv2.CHAIN_APPROX_NONE)
 
-        rads = [g_radius(c) for c in conts]
-        mode = (max(rads) + min(rads)) / 2
+        rads = [g_radius(c) for c in conts if g_radius(c) > 0.2]
+        median = (max(rads) + min(rads)) / 2
 
-        self.p = [p for p in conts if g_radius(p) > mode * 0.5]
-        self.p = [p for p in self.p if g_radius(p) < mode * 1.5]
+        self.p = [p for p in conts if g_radius(p) > median * 0.4]
 
     def set_plants_mask(self):
         hsv = cv2.cvtColor(self.img, cv2.COLOR_RGB2HSV)
@@ -185,11 +185,10 @@ class Auto:
     def draw_plants(self):
         for p in self.p:
 
-            ((x, y), radius) = cv2.minEnclosingCircle(p)
+            ((x, y), _) = cv2.minEnclosingCircle(p)
             center = (int(x), int(y))
-            radius = int(radius)
 
-            cv2.circle(self.mask, center, radius, (0, 255, 0), 2)
+            cv2.circle(self.mask, center, 1, (0, 255, 0), 2)
 
     def detect_plants(self):
         self.set_plants_mask()
@@ -198,4 +197,4 @@ class Auto:
         return 'Done'
 
     def process_data(self):
-        return len(self.p), 2, 3
+        return len(self.p), 200, len(self.p)/200
