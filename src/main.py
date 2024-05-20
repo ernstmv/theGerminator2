@@ -38,7 +38,7 @@ class DialogFrame(ctk.CTkFrame):
                 'Connecting...',
                 'Identifying tray ...',
                 'Identifying plants...',
-                f'Plants: {np}\nTray size: {ts}\nPercentage: {ptg}',
+                f'Plants: {np}\nTray size: {ts}\nPercentage: {ptg * 100}',
                 'Loading...',
                 'Done'
                 ]
@@ -114,7 +114,7 @@ class ButtonsFrame(ctk.CTkFrame):
 
     def save_ip(self):
         ip = self.read_ip_fields()
-        with open('/home/sword/theGerminator/data/ips.txt', 'a') as file:
+        with open('/home/sword/theGerminator/.data/ips.txt', 'a') as file:
             file.write(ip+'\n')
         self.reload_ips()
 
@@ -170,7 +170,7 @@ class ButtonsFrame(ctk.CTkFrame):
         return '.'.join(ip)
 
     def reload_ips(self):
-        with open('/home/sword/theGerminator/data/ips.txt', 'r') as file:
+        with open('/home/sword/theGerminator/.data/ips.txt', 'r') as file:
             ips = file.readlines()
         self.registered_ips = [ip.strip() for ip in ips]
         try:
@@ -267,14 +267,15 @@ class MainWindow(ctk.CTk):
             if self.auto.detect_tray():
                 self.auto.detect_plants()
                 self.np, self.ts, self.ptg = self.auto.process_data()
+                self.plants_coordinates = self.auto.get_plants_coordinates()
                 self.dialog_frame.show_message(
                         n_message=-3,
                         np=self.np,
                         ts=self.ts,
                         ptg=self.ptg)
                 self.stop = True
-            image = self.auto.get_image()
-            image = self.camera.convert_image(image)
+            self.img = self.auto.get_image()
+            image = self.camera.convert_image(self.img)
             self.image_frame.show_image(image)
             self.update()
 
@@ -288,14 +289,17 @@ class MainWindow(ctk.CTk):
 
     def launch_data(self):
         aux = Aux.Aux()
+        mssg = ''
         try:
             aux.write_data(self.img, self.np, self.ts, self.ptg)
+            aux.write_coordinates(self.plants_coordinates)
             aux.send_data()
+            aux.send_coordinates()
             mssg = 'Data loaded'
         except Exception as e:
-            mssg = 'FATAL ERROR: The data are unavailable\n' + e
+            mssg = 'FATAL ERROR: The data are unavailable\n' + str(e)
         finally:
-            self.dialog_frame.show_message(mssg)
+            self.dialog_frame.show_message(mssg=mssg)
 
 
 if __name__ == '__main__':

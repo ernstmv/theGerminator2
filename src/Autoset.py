@@ -16,6 +16,7 @@ class Auto:
         self.r = 0
         self.c = 2
         self.change = False
+        self.p_coordinates = []
 
     def set_image(self, img):
         self.img = img
@@ -85,14 +86,14 @@ class Auto:
                     self.mask,
                     (x, y),
                     5,
-                    (255, 255, 0),
+                    (0, 255, 255),
                     3)
 
             cv2.circle(
                     self.mask,
                     (x1, y1),
                     5,
-                    (255, 255, 0),
+                    (0, 255, 255),
                     3)
 
         if len(pos) < 4 or pos is None:
@@ -168,10 +169,20 @@ class Auto:
                 cv2.RETR_EXTERNAL,
                 cv2.CHAIN_APPROX_NONE)
 
-        rads = [g_radius(c) for c in conts if g_radius(c) > 0.2]
+        rads = [g_radius(c) for c in conts if g_radius(c) > 0.1]
         median = (max(rads) + min(rads)) / 2
 
         self.p = [p for p in conts if g_radius(p) > median * 0.4]
+
+        plants = []
+        for p in self.p:
+            ((x, y), _) = cv2.minEnclosingCircle(p)
+            center = (int(x), int(y))
+            if cv2.pointPolygonTest(self.tray, center, False) > 0:
+                plants.append(p)
+                self.p_coordinates.append(center)
+        self.p = plants
+        print(self.p_coordinates)
 
     def set_plants_mask(self):
         hsv = cv2.cvtColor(self.img, cv2.COLOR_RGB2HSV)
@@ -182,12 +193,25 @@ class Auto:
 
         self.plants_mask = cv2.inRange(hsv, green_l, green_h)
 
+        img, _, _ = cv2.split(self.mask)
+        conts, _ = cv2.findContours(
+                img,
+                cv2.RETR_EXTERNAL,
+                cv2.CHAIN_APPROX_NONE)
+        conts = {cv2.contourArea(cont): cont for cont in conts}
+        try:
+            self.tray = conts[max(conts.keys())]
+        except Exception:
+            return None
+        cv2.drawContours(
+                self.mask,
+                self.tray,
+                -1,
+                (255, 0, 255),
+                1)
+
     def draw_plants(self):
-        for p in self.p:
-
-            ((x, y), _) = cv2.minEnclosingCircle(p)
-            center = (int(x), int(y))
-
+        for center in self.p_coordinates:
             cv2.circle(self.mask, center, 1, (0, 255, 0), 2)
 
     def detect_plants(self):
@@ -197,4 +221,7 @@ class Auto:
         return 'Done'
 
     def process_data(self):
-        return len(self.p), 200, len(self.p)/200
+        return len(self.p_coordinates), 200, len(self.p)/200
+
+    def get_plants_coordinates(self):
+        return self.p_coordinates
