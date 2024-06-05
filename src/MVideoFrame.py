@@ -24,7 +24,7 @@ class MVideoFrame(CTkFrame):
 
         self.load_default_image()
 
-    def show_image(self, image):
+    def set_image(self, image):
         image = self.convert_image(image)
         self.image_label.configure(text='', image=image)
 
@@ -33,9 +33,9 @@ class MVideoFrame(CTkFrame):
         img_pil = Image.fromarray(image)
         img_ctk = CTkImage(
                 light_image=img_pil,
-                size=(int(img.shape[1]*0.8), int(img.shape[0]*0.8)))
+                size=(img.shape[1], img.shape[0]))
         return img_ctk
 
     def load_default_image(self):
         img = imread('/home/leviathan/theGerminator2/.imgs/default1.jpeg')
-        self.show_image(img)
+        self.set_image(img)

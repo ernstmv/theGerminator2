@@ -32,18 +32,38 @@ class FileFrame(CTkFrame):
                 padx=10, pady=10,
                 sticky='ew')
 
-        self.next_button = CTkButton(self, text="", command=self.next)
+        self.next_button = CTkButton(
+                self,
+                text="",
+                border_width=2,
+                text_color='#0D0D0D',
+                border_color="#0D0D0D",
+                hover_color='#737373',
+                command=self.next)
         self.next_button.grid(
                 row=3, column=0,
                 pady=10, padx=10,
                 sticky='ew')
 
-        self.prev_button = CTkButton(self, text="", command=self.prev)
+        self.prev_button = CTkButton(
+                self,
+                text="",
+                border_width=2,
+                text_color='#0D0D0D',
+                border_color="#0D0D0D",
+                hover_color='#737373',
+                command=self.prev)
         self.prev_button.grid(
                 row=3, column=1,
                 pady=10, padx=10,
                 sticky='ew')
-        self.explorer_button = CTkButton(self, text='Browse', command=self.exp)
+        self.explorer_button = CTkButton(
+                self,
+                text='Browse',
+                fg_color="#0D0D0D",
+                text_color='#D9D9D9',
+                hover_color='#404040',
+                command=self.exp)
         self.explorer_button.grid(
                 row=4, column=0,
                 columnspan=2,

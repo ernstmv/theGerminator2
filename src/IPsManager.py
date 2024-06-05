@@ -1,3 +1,6 @@
+from subprocess import Popen, PIPE
+
+
 class IPsManager:
     def __init__(self):
         self.main_camera_ips = '/home/leviathan/theGerminator2/.ips/m_ips.txt'
@@ -40,3 +43,41 @@ class IPsManager:
         with open(self.seco_camera_ips, 'w') as file:
             for ip in ips:
                 file.write(ip + '\n')
+
+    def test_ip(self, ip):
+        process = Popen(
+                ['ping', '-c', '1', ip],
+                stdout=PIPE, stderr=PIPE)
+        output, error = process.communicate()
+
+        return process.returncode == 0
+
+    def m_insert_ip(self, ip):
+        ips = list(set(self.m_read_ip()))
+        try:
+            ips.remove(ip)
+        except Exception:
+            pass
+        ips.insert(0, ip)
+        with open(self.main_camera_ips, 'w') as file:
+            for ip in ips:
+                file.write(ip + '\n')
+
+    def s_insert_ip(self, ip):
+        ips = list(set(self.s_read_ip()))
+        try:
+            ips.remove(ip)
+        except Exception:
+            pass
+        ips.insert(0, ip)
+        with open(self.seco_camera_ips, 'w') as file:
+            for ip in ips:
+                file.write(ip + '\n')
+
+    def get_s_ip(self):
+        ips = self.s_read_ip()
+        return ips[0]
+
+    def get_m_ip(self):
+        ips = self.m_read_ip()
+        return ips[0]

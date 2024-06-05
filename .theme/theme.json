@@ -1,37 +1,37 @@
 {
   "CTk": {
-    "fg_color": ["#1D2326", "#1D2326"]
+    "fg_color": ["#F2F2F2", "#0D0D0D"]
   },
   "CTkToplevel": {
     "fg_color": ["gray95", "gray10"]
   },
   "CTkFrame": {
     "corner_radius": 6,
-    "border_width": 2,
-    "fg_color": ["#3D3E40", "#3D3E40"],
+    "border_width": 0,
+    "fg_color": ["#D9D9D9", "#262626"],
     "top_fg_color": ["gray85", "gray16"],
-    "border_color": ["#6B8C3A", "#6B8C3A"]
+    "border_color": ["#6B8C3A", "#A6A6A6"]
   },
   "CTkButton": {
     "corner_radius": 6,
     "border_width": 2,
-    "fg_color": ["#3D3E40", "#3D3E40"],
-    "hover_color": ["#6B8C3A", "#6B8C3A"],
-    "border_color": ["#BAF241", "#BAF241"],
-    "text_color": ["#DCE4EE", "#DCE4EE"],
+    "fg_color": ["#F2F2F2", "#262626"],
+    "hover_color": ["#6B8C3A", "#658C6F"],
+    "border_color": ["#BAF241", "#595959"],
+    "text_color": ["#DCE4EE", "#595959"],
     "text_color_disabled": ["gray74", "gray60"]
   },
   "CTkLabel": {
-    "corner_radius": 0,
-    "fg_color": "transparent",
-    "text_color": ["gray14", "gray84"]
+    "corner_radius": 5,
+    "text_color":["#404040", "#62CDD9"],
+    "fg_color": ["#8C8C8C", "#404040"]
   },
   "CTkEntry": {
     "corner_radius": 6,
-    "border_width": 2,
+    "border_width": 0,
     "fg_color": ["#F9F9FA", "#343638"],
     "border_color": ["#979DA2", "#565B5E"],
-    "text_color": ["gray14", "gray84"],
+    "text_color": ["gray14", "#0CABA8"],
     "placeholder_text_color": ["gray52", "gray62"]
   },
   "CTkCheckBox": {
@@ -84,9 +84,9 @@
   },
   "CTkOptionMenu": {
     "corner_radius": 6,
-    "fg_color": ["#3a7ebf", "#1f538d"],
-    "button_color": ["#325882", "#14375e"],
-    "button_hover_color": ["#234567", "#1e2c40"],
+    "fg_color": ["#3a7ebf", "#8C8C8C"],
+    "button_color": ["#325882", "#0D0D0D"],
+    "button_hover_color": ["#234567", "#737373"],
     "text_color": ["#DCE4EE", "#DCE4EE"],
     "text_color_disabled": ["gray74", "gray60"]
   },
@@ -147,8 +147,8 @@
       "weight": "normal"
     },
     "Linux": {
-      "family": "Terminess",
-      "size": 13,
+      "family": "Comfortaa",
+      "size": 15,
       "weight": "normal"
     }
   }

@@ -7,7 +7,10 @@ class MessageFrame(CTkFrame):
         self.grid_columnconfigure((0), weight=1)
         self.grid_rowconfigure((0), weight=1)
 
-        self.message_textbox = CTkTextbox(self, state='disabled')
+        self.message_textbox = CTkTextbox(
+                self,
+                font=("Comfortaa", 20),
+                state='disabled')
 
         self.message_textbox.grid(
                 column=0, row=0,
@@ -16,6 +19,5 @@ class MessageFrame(CTkFrame):
 
     def set_message(self, mssg):
         self.message_textbox.configure(state='normal')
-        self.message_textbox.delete('0.0', 'end')
-        self.message_textbox.insert('0.0', mssg)
+        self.message_textbox.insert('0.0', '  : ' + mssg + '\n')
         self.message_textbox.configure(state='disabled')

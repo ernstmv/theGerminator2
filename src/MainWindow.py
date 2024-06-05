@@ -3,13 +3,17 @@ from MessageFrame import MessageFrame
 from FileFrame import FileFrame
 from MVideoFrame import MVideoFrame
 from SVideoFrame import SVideoFrame
-from ConfigFrame import ConfigFrame
+from ControlsFrame import ControlsFrame
+from Camera import Camera
 
 
 class MainWindow(ctk.CTk):
 
     def __init__(self):
         super().__init__()
+
+        self.stop_m = False
+        self.stop_s = False
 
         w = self.winfo_screenwidth()
         h = self.winfo_screenheight()
@@ -25,7 +29,7 @@ class MainWindow(ctk.CTk):
         self.s_video_frame = SVideoFrame(self, w, h)
         self.message_frame = MessageFrame(self, w, h)
         self.file_frame = FileFrame(self, w, h)  # TRABAJA SOLO?
-        self.config_frame = ConfigFrame(self, w, h)
+        self.controls_frame = ControlsFrame(self, w, h)
 
         self.m_video_frame.grid(
                 row=0, column=0,
@@ -41,28 +45,35 @@ class MainWindow(ctk.CTk):
                 padx=10, pady=10,
                 sticky='nsew')
         self.file_frame.grid(row=0, column=2, padx=10, pady=10, sticky='nsew')
-        self.config_frame.grid(
+        self.controls_frame.grid(
                 row=1, column=2,
                 padx=10, pady=10,
                 sticky='nsew')
 
-    def set_video_image(self, image):
-        self.video_frame.set_image(image)
+    def m_connect_camera(self, ip):
+        camera = Camera(ip)
+        while not self.stop_m:
+            img = camera.get_image()
+            self.m_video_frame.set_image(img)
+            self.update()
+        self.stop_m = False
 
     def set_message(self, message):
         self.message_frame.set_message(message)
-
-    def m_connect_camera(self, ip):
-        pass
 
     def autoset(self, ip):
         pass
 
     def m_disconnect(self):
-        pass
+        self.stop_m = True
 
     def s_connect_camera(self, ip):
-        pass
+        camera = Camera(ip)
+        while not self.stop_s:
+            img = camera.get_image()
+            self.s_video_frame.set_image(img)
+            self.update()
+        self.stop_s = False
 
     def s_disconnect(self):
-        pass
+        self.stop_s = True

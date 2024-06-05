@@ -24,7 +24,7 @@ class SVideoFrame(CTkFrame):
 
         self.load_default_image()
 
-    def show_image(self, image):
+    def set_image(self, image):
         image = self.convert_image(image)
         self.image_label.configure(text='', image=image)
 
@@ -38,4 +38,4 @@ class SVideoFrame(CTkFrame):
 
     def load_default_image(self):
         img = imread('/home/leviathan/theGerminator2/.imgs/default2.jpg')
-        self.show_image(img)
+        self.set_image(img)
