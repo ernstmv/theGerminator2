@@ -1,4 +1,9 @@
-from customtkinter import CTkFrame, CTkLabel, CTkTextbox, CTkButton, CTkImage
+from customtkinter import (
+        CTkFrame,
+        CTkLabel,
+        CTkTextbox,
+        CTkButton,
+        CTkImage)
 from cv2 import cvtColor, COLOR_BGR2RGB, imread
 from PIL import Image
 
@@ -16,70 +21,13 @@ class FileFrame(CTkFrame):
                 columnspan=2, sticky='ew',
                 padx=10, pady=10)
 
-        self.image_label = CTkLabel(self)
+        self.image_label = CTkLabel(self, height=int(h/4))
         self.image_label.grid(
                 row=1, column=0,
                 padx=10, pady=10,
                 columnspan=2)
 
-        self.data_textbox = CTkTextbox(
-                self,
-                height=int(h/20),
-                state='disabled')
-        self.data_textbox.grid(
-                row=2, column=0,
-                columnspan=2,
-                padx=10, pady=10,
-                sticky='ew')
-
-        self.next_button = CTkButton(
-                self,
-                text="",
-                border_width=2,
-                text_color='#0D0D0D',
-                border_color="#0D0D0D",
-                hover_color='#737373',
-                command=self.next)
-        self.next_button.grid(
-                row=3, column=0,
-                pady=10, padx=10,
-                sticky='ew')
-
-        self.prev_button = CTkButton(
-                self,
-                text="",
-                border_width=2,
-                text_color='#0D0D0D',
-                border_color="#0D0D0D",
-                hover_color='#737373',
-                command=self.prev)
-        self.prev_button.grid(
-                row=3, column=1,
-                pady=10, padx=10,
-                sticky='ew')
-        self.explorer_button = CTkButton(
-                self,
-                text='Browse',
-                fg_color="#0D0D0D",
-                text_color='#D9D9D9',
-                hover_color='#404040',
-                command=self.exp)
-        self.explorer_button.grid(
-                row=4, column=0,
-                columnspan=2,
-                padx=10, pady=10,
-                sticky='ew')
-
         self.load_default_image()
-
-    def next(self):
-        pass
-
-    def prev(self):
-        pass
-
-    def exp(self):
-        pass
 
     def show_image(self, image):
         image = self.convert_image(image)
@@ -90,9 +38,9 @@ class FileFrame(CTkFrame):
         img_pil = Image.fromarray(image)
         img_ctk = CTkImage(
                 light_image=img_pil,
-                size=(int(img.shape[1]*0.3), int(img.shape[0]*0.3)))
+                size=(int(img.shape[1]*1), int(img.shape[0]*1)))
         return img_ctk
 
     def load_default_image(self):
-        img = imread('/home/leviathan/theGerminator2/.imgs/default3.jpg')
+        img = imread('/home/leviathan/theGerminator2/.theme/img.jpg')
         self.show_image(img)

@@ -37,5 +37,5 @@ class SVideoFrame(CTkFrame):
         return img_ctk
 
     def load_default_image(self):
-        img = imread('/home/leviathan/theGerminator2/.imgs/default2.jpg')
+        img = imread('/home/leviathan/theGerminator2/.theme/default2.jpg')
         self.set_image(img)

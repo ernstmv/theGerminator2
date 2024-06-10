@@ -1,19 +1,22 @@
-import customtkinter as ctk
+from customtkinter import CTk
 from MessageFrame import MessageFrame
 from FileFrame import FileFrame
 from MVideoFrame import MVideoFrame
 from SVideoFrame import SVideoFrame
 from ControlsFrame import ControlsFrame
 from Camera import Camera
+from Detector import Detector
+from BandControl import BandControl
 
 
-class MainWindow(ctk.CTk):
+class MainWindow(CTk):
 
     def __init__(self):
         super().__init__()
 
         self.stop_m = False
         self.stop_s = False
+        self.stop_all = False
 
         w = self.winfo_screenwidth()
         h = self.winfo_screenheight()
@@ -25,10 +28,10 @@ class MainWindow(ctk.CTk):
         self.grid_rowconfigure((0), weight=1)
         self.grid_rowconfigure((1), weight=0)
 
+        self.file_frame = FileFrame(self, w, h)  # TRABAJA SOLO?
         self.m_video_frame = MVideoFrame(self, w, h)
         self.s_video_frame = SVideoFrame(self, w, h)
         self.message_frame = MessageFrame(self, w, h)
-        self.file_frame = FileFrame(self, w, h)  # TRABAJA SOLO?
         self.controls_frame = ControlsFrame(self, w, h)
 
         self.m_video_frame.grid(
@@ -56,16 +59,42 @@ class MainWindow(ctk.CTk):
             img = camera.get_image()
             self.m_video_frame.set_image(img)
             self.update()
+        del camera
         self.stop_m = False
 
     def set_message(self, message):
         self.message_frame.set_message(message)
 
-    def autoset(self, ip):
-        pass
+    def autoset(self, m_ip, s_ip):
+        m_cam = Camera(m_ip)
+        s_cam = Camera(s_ip)
+        detector = Detector(self)
+        self.band = BandControl()
+        self.band.run()
+
+        while not self.stop_all:
+
+            m_img, s_img = m_cam.get_image(), s_cam.get_image()
+            detector.set_images(m_img, s_img)
+            detector.detect()
+            m_img, s_img = detector.get_images()
+
+            self.m_video_frame.set_image(m_img)
+            self.s_video_frame.set_image(s_img)
+
+            self.update()
+
+        self.band.stop()
+        del m_cam, s_cam, detector, self.band
+        self.set_message("All resources released")
+        self.stop_all = False
+
+    def stop_auto(self):
+        self.stop_all = True
 
     def m_disconnect(self):
         self.stop_m = True
+        self.set_message("Main camera disconnected")
 
     def s_connect_camera(self, ip):
         camera = Camera(ip)
@@ -73,7 +102,9 @@ class MainWindow(ctk.CTk):
             img = camera.get_image()
             self.s_video_frame.set_image(img)
             self.update()
+        del camera
         self.stop_s = False
 
     def s_disconnect(self):
         self.stop_s = True
+        self.set_message('Aux camera disconnected')

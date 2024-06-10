@@ -12,6 +12,8 @@ class MVideoFrame(CTkFrame):
         self.grid_rowconfigure((0), weight=0)
         self.grid_rowconfigure((1), weight=1)
 
+        self.master = master
+
         self.frame_title = CTkLabel(self, text="MAIN CAMERA")
         self.frame_title.grid(
                 row=0, column=0,
@@ -20,7 +22,7 @@ class MVideoFrame(CTkFrame):
                 columnspan=2)
 
         self.image_label = CTkLabel(self, text=None)
-        self.image_label.grid(column=0, row=1)
+        self.image_label.grid(column=0, row=1, padx=10, pady=10)
 
         self.load_default_image()
 
@@ -37,5 +39,5 @@ class MVideoFrame(CTkFrame):
         return img_ctk
 
     def load_default_image(self):
-        img = imread('/home/leviathan/theGerminator2/.imgs/default1.jpeg')
+        img = imread('/home/leviathan/theGerminator2/.theme/default1.jpeg')
         self.set_image(img)

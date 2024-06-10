@@ -15,10 +15,10 @@
   "CTkButton": {
     "corner_radius": 6,
     "border_width": 2,
-    "fg_color": ["#F2F2F2", "#262626"],
-    "hover_color": ["#6B8C3A", "#658C6F"],
+    "fg_color": ["#F2F2F2", "#0D0D0D"],
+    "hover_color": ["#6B8C3A", "#404040"],
     "border_color": ["#BAF241", "#595959"],
-    "text_color": ["#DCE4EE", "#595959"],
+    "text_color": ["#DCE4EE", "#D9D9D9"],
     "text_color_disabled": ["gray74", "gray60"]
   },
   "CTkLabel": {

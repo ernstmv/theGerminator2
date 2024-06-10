@@ -8,7 +8,6 @@ class Camera():
     def __init__(self, ip):
         self.ip = ip
         self.url = 'http://' + self.ip + ':8080/shot.jpg'
-        self.port = 80
 
     def get_image(self):
         img_resp = get(self.url)
