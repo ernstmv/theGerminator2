@@ -1,5 +1,9 @@
+from TraysManager import TraysManager
+from customtkinter import CTkImage
+from PIL import Image
+import matplotlib.pyplot as plt
 import cv2
-from math import dist, atan
+from math import dist
 import numpy as np
 
 
@@ -15,18 +19,15 @@ class Detector:
         self.tray_greenhouse = None
         self.tray_crop = None
         self.tray_size = None
-        self.tray_n_plants = []
+        self.tray_plants = []
+        self.plants_coordinates = []
+        self.plants_areas = []
+        self.plants_colors = []
+        self.tray_n_plants = None
         self.tray_germination = None
         self.master = master
 
         self.QRdetector = cv2.QRCodeDetector()
-
-        self.kernel = 5
-        self.r = 0
-        self.c = 2.5
-        self.change = False
-        self.p_coordinates = []
-        self.tracker = None
 
     def set_images(self, m_img, s_img):
         self.m_img = m_img
@@ -45,18 +46,52 @@ class Detector:
             self.old_hist = self.get_frame_hist()
             return None
         self.detect_plants()
-        if len(self.tray_n_plants) != 0:
+        if len(self.tray_plants) != 0:
             self.new_hist = self.get_frame_hist()
-            r = cv2.compareHist(self.old_hist, self.new_hist, cv2.HISTCMP_CORREL)
-            if r > 0.95:
-                self.put_message(f'Total plants = {len(self.tray_n_plants)}')
+            r = cv2.compareHist(
+                    self.old_hist,
+                    self.new_hist,
+                    cv2.HISTCMP_CORREL)
+
+            if r > 0.9:
+
+                self.put_message(f'Crop = {self.tray_crop}')
+                self.put_message(f'Greenhouse = {self.tray_greenhouse}')
+                self.put_message(f'Total plants = {self.tray_n_plants}')
+                self.put_message(f'Tray size = {self.tray_size}')
+                self.put_message(f'Germination = {self.tray_germination}')
+
                 self.add_tray()
+                self.show_graphics()
+
                 self.tray_id = None
                 self.tray_crop = None
                 self.tray_size = None
-                self.tray_n_plants = []
+                self.tray_plants = []
+                self.plants_areas = []
+                self.plants_coordintes = []
+                self.plants_colors = []
+                self.tray_n_plants = None
                 self.tray_greenhouse = None
                 self.tray_germination = None
+
+    def show_graphics(self):
+        fig, ax = plt.subplots()
+        ax.plot(self.plants_areas)
+        ax.set_xlabel('Plants')
+        ax.set_ylabel('Areas')
+        ax.set_title('Areas plot')
+
+        fig.canvas.draw()
+
+        imagen_np = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+        imagen_np = imagen_np.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+
+        plt.close(fig)
+
+        imagen_bgr = cv2.cvtColor(imagen_np, cv2.COLOR_RGB2BGR)
+
+        self.master.file_frame.show_image(imagen_bgr)
 
     def detectQR(self):
 
@@ -73,12 +108,13 @@ class Detector:
             dists = []
             points = points[0].astype(int)
             for i in range(len(points)):
+                p1 = tuple(points[i])
+                p2 = tuple(points[(i+1) % len(points)])
                 cv2.line(
                         self.s_mask,
-                        tuple(points[i]),
-                        tuple(points[(i + 1) % len(points)]),
+                        p1, p2,
                         (0, 255, 0), 4)
-                dists.append(dist(tuple(points[i]), tuple(points[(i+1)%len(points)])))
+                dists.append(dist(p1, p2))
 
             lado = dists[0]
             for d in dists:
@@ -98,7 +134,7 @@ class Detector:
                 self.tray_id = values[0]
                 self.tray_greenhouse = values[1]
                 self.tray_crop = values[2]
-                self.tray_size = values[3]
+                self.tray_size = int(values[3])
                 self.put_message(f'Tray identified with ID: {self.tray_id}')
                 self.master.band.run()
             except Exception:
@@ -133,16 +169,32 @@ class Detector:
                         (x+w, y+h),
                         (0, 255, 0),
                         2)
-                self.tray_n_plants.append(plant)
+                self.tray_plants.append(plant)
+                plant_center, _ = cv2.minEnclosingCircle(plant)
+                self.plants_coordinates.append(plant_center)
+                self.plants_areas.append(cv2.contourArea(plant))
+                cont_mask = np.zeros_like(self.m_img[:, :, 0])
+                cv2.drawContours(cont_mask, [plant], -1, 255, -1)
+                self.plants_colors.append(cv2.mean(self.m_img, mask=cont_mask))
+        self.tray_n_plants = len(self.tray_plants)
+        self.tray_germination = self.tray_n_plants / self.tray_size * 100
 
     def put_message(self, mssg):
         self.master.set_message(mssg)
 
     def add_tray(self):
-        pass
-
-    def add_plant(self, plant):
-        pass
+        manager = TraysManager()
+        content = [
+                self.tray_id,
+                self.tray_crop,
+                self.tray_greenhouse,
+                self.tray_size,
+                self.tray_n_plants,
+                self.tray_germination]
+        manager.add_tray(content)
+        manager.add_coordinates(self.tray_id, self.plants_coordinates)
+        manager.add_areas(self.tray_id, self.plants_areas)
+        del manager
 
     def get_frame_hist(self):
         gray = cv2.cvtColor(self.m_img, cv2.COLOR_BGR2RGB)

@@ -1,0 +1,5 @@
+ID,crop, greenhouse,size,plants,germination
+h3rzeiu4vi8hm8yr,Cempasuchil,AGFarms,200,6,3.0
+
+h3rzeiu4vi8hm8yr,Cempasuchil,AGFarms,200,19,9.5
+zy5vggcsfhogkmkt,Clavel,AGFarms,15,9,60.0

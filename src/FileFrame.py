@@ -4,16 +4,16 @@ from customtkinter import (
         CTkTextbox,
         CTkButton,
         CTkImage)
-from cv2 import cvtColor, COLOR_BGR2RGB, imread
+from cv2 import cvtColor, COLOR_BGR2RGB, imread, resize, INTER_AREA
 from PIL import Image
 
 
 class FileFrame(CTkFrame):
     def __init__(self, master, w, h):
-        super().__init__(master)
+        super().__init__(master, width=int(3*w/10), height=int(h/3))
 
-        self.columnconfigure((0, 1), weight=1)
-        self.rowconfigure((0, 1, 2, 3), weight=0)
+        self.columnconfigure((0), weight=1)
+        self.rowconfigure((0, 1), weight=0)
 
         self.frame_title = CTkLabel(self, text='Visualizer')
         self.frame_title.grid(
@@ -42,5 +42,9 @@ class FileFrame(CTkFrame):
         return img_ctk
 
     def load_default_image(self):
-        img = imread('/home/leviathan/theGerminator2/.theme/img.jpg')
+        img = imread('/home/leviathan/theGerminator2/.theme/default.jpeg')
+        h, w = img.shape[:2]
+        scale = 0.5
+        new_size = (int(w*scale), int(h*scale))
+        img = resize(img, new_size, interpolation=INTER_AREA)
         self.show_image(img)

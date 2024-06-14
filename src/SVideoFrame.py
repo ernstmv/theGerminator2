@@ -1,5 +1,5 @@
 from customtkinter import CTkFrame, CTkLabel, CTkImage
-from cv2 import cvtColor, COLOR_BGR2RGB, imread
+from cv2 import cvtColor, COLOR_BGR2RGB, imread, resize, INTER_AREA
 from PIL import Image
 
 
@@ -37,5 +37,9 @@ class SVideoFrame(CTkFrame):
         return img_ctk
 
     def load_default_image(self):
-        img = imread('/home/leviathan/theGerminator2/.theme/default2.jpg')
+        img = imread('/home/leviathan/theGerminator2/.theme/default.jpeg')
+        h, w = img.shape[:2]
+        scale = 0.5
+        new_size = (int(w*scale), int(h*scale))
+        img = resize(img, new_size, interpolation=INTER_AREA)
         self.set_image(img)

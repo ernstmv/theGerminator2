@@ -39,5 +39,6 @@ class MVideoFrame(CTkFrame):
         return img_ctk
 
     def load_default_image(self):
-        img = imread('/home/leviathan/theGerminator2/.theme/default1.jpeg')
+        img = imread('/home/leviathan/theGerminator2/.theme/default.jpeg')
+        img = img[300:700, 0:1000]
         self.set_image(img)
